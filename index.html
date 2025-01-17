@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Voice Calculator</title>
+  <style>
+    #calculator {
+      text-align: center;
+      margin-top: 50px;
+    }
+
+    input {
+      width: 200px;
+      padding: 10px;
+      margin-top: 20px;
+    }
+
+    button {
+      padding: 10px 20px;
+      margin: 10px;
+      cursor: pointer;
+    }
+
+    #result {
+      margin-top: 20px;
+      font-size: 1.5em;
+    }
+  </style>
+</head>
+<body>
+  <div id="calculator">
+    <button id="start">Start Listening</button>
+    <input type="text" id="input" readonly placeholder="Speak your calculation">
+    <button id="calculate">Calculate</button>
+    <div id="result"></div>
+  </div>
+
+  <script>
+    const startButton = document.getElementById('start');
+    const inputField = document.getElementById('input');
+    const calculateButton = document.getElementById('calculate');
+    const resultDiv = document.getElementById('result');
+
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+
+    recognition.continuous = true;
+    recognition.lang = 'en-US';
+
+    startButton.addEventListener('click', () => {
+      recognition.start();
+      inputField.value = "Listening...";
+    });
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[event.results.length - 1][0].transcript;
+      inputField.value = transcript;
+    };
+
+    calculateButton.addEventListener('click', () => {
+      const inputText = inputField.value;
+      try {
+        const result = eval(inputText);
+        resultDiv.textContent = `Result: ${result}`;
+        speakResult(result);
+      } catch (error) {
+        resultDiv.textContent = "Invalid calculation.";
+      }
+    });
+
+    function speakResult(result) {
+      const speech = new SpeechSynthesisUtterance(`The result is ${result}`);
+      window.speechSynthesis.speak(speech);
+    }
+  </script>
+</body>
+</html>
