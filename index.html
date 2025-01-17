@@ -1,30 +1,51 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="hi">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Voice Calculator</title>
+  <title>Advanced Voice Calculator</title>
   <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      padding: 20px;
+    }
     #calculator {
       text-align: center;
       margin-top: 50px;
     }
-
-    input {
-      width: 200px;
-      padding: 10px;
-      margin-top: 20px;
-    }
-
-    button {
+    input, button {
       padding: 10px 20px;
       margin: 10px;
+      font-size: 18px;
       cursor: pointer;
     }
-
+    input {
+      width: 200px;
+      text-align: center;
+    }
     #result {
       margin-top: 20px;
       font-size: 1.5em;
+    }
+    #history {
+      margin-top: 30px;
+      padding: 10px;
+      background-color: #e0e0e0;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .history-item {
+      padding: 5px;
+      margin: 5px 0;
+      background-color: #d1ffd1;
+      border-radius: 5px;
+    }
+    .edit-button {
+      margin-left: 10px;
+      cursor: pointer;
+      color: blue;
+      text-decoration: underline;
     }
   </style>
 </head>
@@ -34,6 +55,7 @@
     <input type="text" id="input" readonly placeholder="Speak your calculation">
     <button id="calculate">Calculate</button>
     <div id="result"></div>
+    <div id="history"></div>
   </div>
 
   <script>
@@ -41,36 +63,70 @@
     const inputField = document.getElementById('input');
     const calculateButton = document.getElementById('calculate');
     const resultDiv = document.getElementById('result');
+    const historyDiv = document.getElementById('history');
 
     const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
 
     recognition.continuous = true;
-    recognition.lang = 'en-US';
+    recognition.lang = 'hi-IN'; // Hindi language
+
+    let historyList = [];
 
     startButton.addEventListener('click', () => {
       recognition.start();
-      inputField.value = "Listening...";
+      inputField.value = "Sun raha hoon...";
     });
 
     recognition.onresult = (event) => {
       const transcript = event.results[event.results.length - 1][0].transcript;
-      inputField.value = transcript;
+      inputField.value = filterNumbers(transcript); // Only numbers and operators
     };
 
     calculateButton.addEventListener('click', () => {
       const inputText = inputField.value;
       try {
-        const result = eval(inputText);
+        const result = eval(inputText); // Perform calculation
         resultDiv.textContent = `Result: ${result}`;
         speakResult(result);
+        addToHistory(inputText, result);
       } catch (error) {
-        resultDiv.textContent = "Invalid calculation.";
+        resultDiv.textContent = "Galat ganit.";
       }
     });
 
     function speakResult(result) {
-      const speech = new SpeechSynthesisUtterance(`The result is ${result}`);
+      const speech = new SpeechSynthesisUtterance(`Result hai ${result}`);
       window.speechSynthesis.speak(speech);
+    }
+
+    function addToHistory(input, result) {
+      const historyItem = document.createElement('div');
+      historyItem.classList.add('history-item');
+      historyItem.innerHTML = `Hisaab: ${input} = ${result} 
+        <span class="edit-button" onclick="editHistory(${historyList.length})">Edit</span>`;
+      historyDiv.appendChild(historyItem);
+      historyList.push({ input, result });
+    }
+
+    function editHistory(index) {
+      const newInput = prompt("Naya hisaab daalein:", historyList[index].input);
+      if (newInput) {
+        try {
+          const newResult = eval(newInput);
+          historyList[index].input = newInput;
+          historyList[index].result = newResult;
+          historyDiv.children[index].innerHTML = `Hisaab: ${newInput} = ${newResult} 
+            <span class="edit-button" onclick="editHistory(${index})">Edit</span>`;
+          alert(`Hisaab ko update kiya gaya hai: ${newResult}`);
+        } catch (error) {
+          alert("Galat ganit.");
+        }
+      }
+    }
+
+    function filterNumbers(text) {
+      // Allow only numbers, operators, and a few symbols (ignoring non-relevant words)
+      return text.replace(/[^0-9+\-*/().\s]/g, ''); // Remove non-numerical characters
     }
   </script>
 </body>
